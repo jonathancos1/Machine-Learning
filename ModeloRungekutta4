@@ -1,0 +1,123 @@
+# Bibliotecas para processamento de dados.
+import numpy as np
+# Bibliotecas para construção de gráficos.
+import matplotlib.pyplot as plt
+
+
+# Método de Runge-Kutta de 4a ordem
+def runge_kutta_4(modelo, t0, t_final, y0, h, parametros):
+    t = np.arange(t0, t_final + h, h)
+    y = np.zeros( (len(t),len(y0) ))
+    y[0] = y0
+
+    for i in range(1, len(t)):
+        k1 = h * modelo(t[i-1], y[i-1], *parametros)
+        k2 = h * modelo(t[i-1] + h/2, y[i-1] + k1/2, *parametros)
+        k3 = h * modelo(t[i-1] + h/2, y[i-1] + k2/2, *parametros)
+        k4 = h * modelo(t[i-1] + h, y[i-1] + k3, *parametros)
+        y[i] = y[i-1] + (k1 + 2*k2 + 2*k3 + k4) / 6
+
+    return t,y
+
+
+
+# Definição do modelo SIR
+def ModeloSIR(t, y, beta, gamma):
+# Armazenando a varáveis S, I e R em y.
+    S, I, R = y
+    dS = -beta * S * I
+    dI = beta * S * I - gamma * I
+    dR = gamma * I
+
+    return np.array([dS, dI, dR])
+
+
+
+# Parâmetros do modelo
+beta = 0.3
+gamma = 0.1
+
+
+# Tamanho da População
+N = 100000
+# Condição 
+S0 = 99993/N # Proporção inicial de suscetíveis
+I0 = 7/N # Proporção inicial de infectados
+R0 = 0.0 # Proporção inicial de recuperados
+
+
+y0 = np.array([S0, I0, R0]) # Guarda em um vetor as condições iniciais
+
+
+
+# Configuração de tempo e passo
+t0 = 0
+t_final = 180
+
+# Espaço
+h = 0.001
+
+
+# Resolvendo o Modelo pelo RK4
+param = (beta, gamma)
+t, y = runge_kutta_4(ModeloSIR, t0, t_final, y0,h, param)
+
+
+
+# Gráfico da Dinâmica Populacional do Modelo SIR.
+plt.figure( figsize = (10, 6) )
+plt.plot(t , y[:, 0], label = 'Suscetíveis (S)', color='blue')
+plt.plot(t , y[:, 1], label = 'Infectados (I)', color='red')
+plt.plot(t , y[:, 2], label = 'Recuperados (R)', color='green')
+plt.title('Modelo SIR Resolvido com Runge-Kutta de 4a Ordem')
+plt.xlabel('Tempo')
+plt.ylabel('Proporção da População')
+plt.legend()
+plt.grid()
+# Configura os limites e os intervalos nos eixos X e Y.
+plt.ylim(0, 1) # definindo o intervalo de proporção de y
+plt.yticks(np.arange(0, 1.1, 0.1)) # De 0 a 1 em incrementos de 0,1
+plt.xlim(left = 0) # Ajustar o eixo x com y
+# Exibe o gráfico para o modelo de Gradient Boosting.
+plt.show()
+
+
+
+
+# Fixar os parâmetros
+betaFixo = 0.3
+gammaFixo = 0.1
+
+betaValores = np.linspace(0.1, 1.0, 10)
+gammaValores = np.linspace(0.1, 1.0, 10)
+
+R_0beta = betaValores/gammaFixo
+R_0gamma = betaFixo/gammaValores
+
+
+
+plt.subplot(1, 2, 1)
+
+plt.plot(betaValores, R_0beta, color = 'blue')
+plt.axhline(1, color = 'red', linestyle = '--')
+plt.title('R_0 com a variação de $\\beta$')
+plt.xlabel('Taxa de transmissão')
+plt.ylabel('$R_0$')
+
+plt.grid()
+
+# Variação de gamma
+plt.subplot(1, 2, 2)
+plt.plot(gammaValores, R_0gamma, color = 'green')
+plt.axhline(1, color = 'red', linestyle = '--')
+plt.title('R_0 com a variação de $\\gamma$')
+plt.xlabel('Taxa de recuperação')
+plt.ylabel('$R_0$')
+plt.grid()
+
+plt.tight_layout()
+plt.show()
+
+
+
+
